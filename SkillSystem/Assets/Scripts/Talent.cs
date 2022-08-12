@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Skill/Talent")]
-public class Talent : ScriptableObject
+public class Talent : MonoBehaviour
 {
     public float modifierAmount;
     public Skill.StatsType statType = Skill.StatsType.None;     // identifier to which skill values to modify with modifierAmount
