@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,8 @@ public class SkillCreator : EditorWindow
     private List<string> skillNames = new List<string>();
     private MonoScript[] skillScripts;
     private SkillSetting baseSkillSetting;
+    private float amount = 0;
+    private Skill.StatsType statsType = Skill.StatsType.None;
 
     [MenuItem("Project/SkillCreator", false)]
     static void Init()
@@ -50,12 +53,10 @@ public class SkillCreator : EditorWindow
             EditorGUILayout.Space(20f);
             EditorGUILayout.BeginVertical();
 
-            Rect dropdownRect = EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Skill script");
-            string[] test = new string[] { "DamageSkill", "MobilitySkill", "StatSkill", "SupportSkill" };
-            selectedSkillIndex = EditorGUI.Popup(new Rect(dropdownRect.width/2, dropdownRect.y, 180, 80), selectedSkillIndex, skillNames.ToArray());
-            EditorGUILayout.EndHorizontal();
+            // dropdown to select skill scripts
+            selectedSkillIndex = EditorGUILayout.Popup("Skill script:", selectedSkillIndex, skillNames.ToArray());
 
+            // input fields for skill settings
             if (baseSkillSetting != null)
             {
                 baseSkillSetting.skillName = EditorGUILayout.TextField("Skill Name:", baseSkillSetting.skillName);
@@ -64,6 +65,13 @@ public class SkillCreator : EditorWindow
                 baseSkillSetting.cooldown = float.Parse(EditorGUILayout.TextField("Cooldown:", baseSkillSetting.cooldown.ToString()));
             }
 
+            // other skill details
+            amount = float.Parse(EditorGUILayout.TextField("Extra amount on skill:", amount.ToString()));
+            statsType = (Skill.StatsType)EditorGUILayout.EnumPopup("Skill Stats Type for Talent:", statsType);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(50f);
+            // create skill button with logic
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Create Skill", GUILayout.Height(60f)))
             {
@@ -80,16 +88,16 @@ public class SkillCreator : EditorWindow
                     settingPath = AssetDatabase.GenerateUniqueAssetPath(settingPath);
                     AssetDatabase.CopyAsset(skillSettingTemplatePath, settingPath);
                     skill.AddSkillSetting(AssetDatabase.LoadAssetAtPath<SkillSetting>(settingPath));
+                    skill.SetAmounts(amount);
+                    skill.statType = statsType;
 
                     bool result;
                     PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out result);
-                    Debug.Log($"RESULT {result}");
                     if (result)
                         DestroyImmediate(go);
                 }
             }
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndVertical();
         }
     }
 }

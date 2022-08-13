@@ -11,6 +11,9 @@ public abstract class Skill : MonoBehaviour
         Damage = 1,
         ManaCost = 2,
         CooldownReduce = 3,
+        StatAmount = 4,
+        Mobility = 5,
+        Support = 6,
 
         OnActivate = 101
     }
@@ -63,6 +66,11 @@ public abstract class Skill : MonoBehaviour
     public virtual void AddSkillSetting(SkillSetting setting)
     {
         skillSetting = setting;
+    }
+
+    public virtual void SetAmounts(params float[] amounts)
+    {
+
     }
 #endif
 }

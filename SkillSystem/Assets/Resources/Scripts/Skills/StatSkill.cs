@@ -26,4 +26,13 @@ public class StatSkill : Skill
 
         return false;
     }
+
+#if UNITY_EDITOR
+    public override void SetAmounts(params float[] amounts)
+    {
+        base.SetAmounts(amounts);
+        if (amounts.Length > 0)
+            statAmount = amounts[0];
+    }
+#endif
 }
