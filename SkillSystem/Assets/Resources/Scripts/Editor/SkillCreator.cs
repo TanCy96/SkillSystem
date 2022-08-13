@@ -6,13 +6,16 @@ using UnityEditor;
 public class SkillCreator : EditorWindow
 {
     private const string skillPrefabPath = "Assets/Resources/Prefabs/Skills";
+    private const string skillSettingPath = "Assets/Resources/Prefabs/SkillSettings";
     private const string skillTemplatePath = "Assets/Resources/Prefabs/SkillTemplate.prefab";
+    private const string skillSettingTemplatePath = "Assets/Resources/Prefabs/SkillSettingTemplate.asset";
     private const string skillScriptsPath = "Scripts/Skills";
 
     private int currentTab = 0;
     private int selectedSkillIndex = 0;
     private List<string> skillNames = new List<string>();
     private MonoScript[] skillScripts;
+    private SkillSetting baseSkillSetting;
 
     [MenuItem("Project/SkillCreator", false)]
     static void Init()
@@ -31,6 +34,9 @@ public class SkillCreator : EditorWindow
         {
             skillNames.Add(skillScripts[i].GetClass().ToString());
         }
+
+        if (baseSkillSetting == null)
+            baseSkillSetting = AssetDatabase.LoadAssetAtPath<SkillSetting>(skillSettingTemplatePath);
     }
 
     private void OnGUI()
@@ -50,6 +56,14 @@ public class SkillCreator : EditorWindow
             selectedSkillIndex = EditorGUI.Popup(new Rect(dropdownRect.width/2, dropdownRect.y, 180, 80), selectedSkillIndex, skillNames.ToArray());
             EditorGUILayout.EndHorizontal();
 
+            if (baseSkillSetting != null)
+            {
+                baseSkillSetting.skillName = EditorGUILayout.TextField("Skill Name:", baseSkillSetting.skillName);
+                baseSkillSetting.desc = EditorGUILayout.TextField("Skill Descriptions:", baseSkillSetting.desc);
+                baseSkillSetting.mana = float.Parse(EditorGUILayout.TextField("Mana Cost:", baseSkillSetting.mana.ToString()));
+                baseSkillSetting.cooldown = float.Parse(EditorGUILayout.TextField("Cooldown:", baseSkillSetting.cooldown.ToString()));
+            }
+
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Create Skill", GUILayout.Height(60f)))
             {
@@ -57,10 +71,15 @@ public class SkillCreator : EditorWindow
                 if (template != null)
                 {
                     GameObject go = Instantiate(template);
-                    go.AddComponent(skillScripts[selectedSkillIndex].GetClass());
+                    Skill skill = go.AddComponent(skillScripts[selectedSkillIndex].GetClass()) as Skill;
 
-                    string path = skillPrefabPath + "/Test.prefab";
+                    string path = skillPrefabPath + $"/{baseSkillSetting.skillName}.prefab";
                     path = AssetDatabase.GenerateUniqueAssetPath(path);
+
+                    string settingPath = skillSettingPath + $"/{baseSkillSetting.skillName}.asset";
+                    settingPath = AssetDatabase.GenerateUniqueAssetPath(settingPath);
+                    AssetDatabase.CopyAsset(skillSettingTemplatePath, settingPath);
+                    skill.AddSkillSetting(AssetDatabase.LoadAssetAtPath<SkillSetting>(settingPath));
 
                     bool result;
                     PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out result);

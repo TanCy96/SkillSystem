@@ -58,4 +58,11 @@ public abstract class Skill : MonoBehaviour
 
         return false;
     }
+
+#if UNITY_EDITOR
+    public virtual void AddSkillSetting(SkillSetting setting)
+    {
+        skillSetting = setting;
+    }
+#endif
 }
