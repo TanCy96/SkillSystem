@@ -11,6 +11,8 @@ public class SkillCreator : EditorWindow
     private const string skillTemplatePath = "Assets/Resources/Prefabs/SkillTemplate.prefab";
     private const string skillSettingTemplatePath = "Assets/Resources/Prefabs/SkillSettingTemplate.asset";
     private const string skillScriptsPath = "Scripts/Skills";
+    private const string talentScriptsPath = "Scripts/Talents";
+    private const string talentPrefabPath = "Assets/Resources/Prefabs/Talents";
 
     private int currentTab = 0;
     private int selectedSkillIndex = 0;
@@ -19,6 +21,12 @@ public class SkillCreator : EditorWindow
     private SkillSetting baseSkillSetting;
     private float amount = 0;
     private Skill.StatsType statsType = Skill.StatsType.None;
+
+    private int selectedTalentIndex = 0;
+    private List<string> talentNames = new List<string>();
+    private MonoScript[] talentScripts;
+    private float talentAmount = 0;
+    private string talentName;
 
     [MenuItem("Project/SkillCreator", false)]
     static void Init()
@@ -36,6 +44,13 @@ public class SkillCreator : EditorWindow
         for (int i = 0; i < skillScripts.Length; i++)
         {
             skillNames.Add(skillScripts[i].GetClass().ToString());
+        }
+
+        talentNames.Clear();
+        talentScripts = Resources.LoadAll<MonoScript>(talentScriptsPath);
+        for (int i = 0; i < talentScripts.Length; i++)
+        {
+            talentNames.Add(talentScripts[i].GetClass().ToString());
         }
 
         if (baseSkillSetting == null)
@@ -90,6 +105,45 @@ public class SkillCreator : EditorWindow
                     skill.AddSkillSetting(AssetDatabase.LoadAssetAtPath<SkillSetting>(settingPath));
                     skill.SetAmounts(amount);
                     skill.statType = statsType;
+
+                    bool result;
+                    PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out result);
+                    if (result)
+                        DestroyImmediate(go);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        else if (currentTab == 1)
+        {
+            EditorGUILayout.LabelField("Create a Talent object to attach on Skill in game");
+            EditorGUILayout.Space(20f);
+            EditorGUILayout.BeginVertical();
+
+            // dropdown to select talent scripts
+            selectedTalentIndex = EditorGUILayout.Popup("Talent script:", selectedTalentIndex, talentNames.ToArray());
+
+            // other talent details
+            talentName = EditorGUILayout.TextField("Talent Name:", talentName);
+            talentAmount = float.Parse(EditorGUILayout.TextField("Modifier amount on talent:", talentAmount.ToString()));
+            statsType = (Skill.StatsType)EditorGUILayout.EnumPopup("Stats Type for Talent:", statsType);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(50f);
+            // create skill button with logic
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Create Talent", GUILayout.Height(60f)))
+            {
+                GameObject template = PrefabUtility.LoadPrefabContents(skillTemplatePath);
+                if (template != null)
+                {
+                    GameObject go = Instantiate(template);
+                    Talent tal = go.AddComponent(talentScripts[selectedTalentIndex].GetClass()) as Talent;
+
+                    string path = talentPrefabPath + $"/{talentName}.prefab";
+                    path = AssetDatabase.GenerateUniqueAssetPath(path);
+                    tal.statType = statsType;
+                    tal.modifierAmount = talentAmount;
 
                     bool result;
                     PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out result);
